@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Menu, X, Bell, MessageCircle, User, LogOut, Building2, CircleDollarSign, Calendar, VideoIcon,FormInput } from 'lucide-react';
+import { Menu, X, Bell, MessageCircle, User, LogOut, Building2, CircleDollarSign, Calendar, VideoIcon,FormInput,Currency } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
@@ -67,8 +67,12 @@ export const Navbar: React.FC = () => {
       icon: <FormInput />,
       text: "Document Chamber",
       path: "/document"
+    },
+    {
+      icon: <Currency />,
+      text: "Payment",
+      path: "/payment"
     }
-
   ];
 
   return (
