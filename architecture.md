@@ -1,261 +1,132 @@
-# Nexus Platform — Architecture & Week‑1 Implementation Guide
+# Nexus Platform — Architecture & Implementation Guide  
 
-> **Scope:** This document explains how the Nexus React app (Vite + Tailwind) is structured and how the Week‑1 “Scheduling Calendar” feature is integrated. Keep this file at the project root as `ARCHITECTURE.md`.
+> **Scope:** This document explains how the Nexus React app (Vite + Tailwind) is structured and summarizes the implementation across **Week-1 to Week-3 milestones**. Keep this file at the project root as `ARCHITECTURE.md`.
 
 ---
 
 ## 1) Tech Stack & Project Info
-- **Runtime/Build:** Node 18+/20+, Vite
-- **Framework:** React (Hooks)
-- **Styling:** Tailwind CSS (custom theme)
-- **Routing:** React Router (if present) / Vite SPA routing
-- **Deployment:** Vercel
+- **Runtime/Build:** Node 18+/20+, Vite  
+- **Framework:** React (Hooks)  
+- **Styling:** Tailwind CSS (custom theme)  
+- **Routing:** React Router  
+- **Deployment:** Vercel  
 
-### NPM scripts (typical)
+### NPM scripts
 ```bash
 npm install       # install deps
-npm run dev       # start Vite dev server (usually http://localhost:5173)
+npm run dev       # start Vite dev server
 npm run build     # production build (to /dist)
 npm run preview   # preview the production build locally
-```
 
----
 
-## 2) Directory Structure (High‑level)
-```
 project-root/
 ├─ index.html
 ├─ package.json
 ├─ tailwind.config.js
 ├─ postcss.config.js
 ├─ vite.config.js
-├─ ARCHITECTURE.md   ← (this file)
+├─ ARCHITECTURE.md   ← this file
 └─ src/
-   ├─ main.jsx               # React entrypoint (creates root)
-   ├─ App.jsx                # App shell: routes/layout
-   ├─ assets/                # images, logos, icons
-   ├─ styles/                # global.css, tailwind.css, util classes
-   ├─ components/            # reusable UI components
-   │  ├─ ui/                 # low-level atoms (Button, Input, Modal, Card)
+   ├─ main.tsx / main.jsx
+   ├─ App.tsx / App.jsx
+   ├─ assets/                # logos, icons, images
+   ├─ styles/                # global.css, tailwind.css
+   ├─ components/
+   │  ├─ ui/                 # Button, Input, Card, Modal, Badge
    │  ├─ layout/             # Navbar, Sidebar, Footer
-   │  ├─ calendar/           # Calendar feature components (Week‑1)
-   │  └─ ...
-   ├─ pages/                 # route-level views (Login, Dashboard, Profile)
-   ├─ hooks/                 # custom hooks (useAuth, useFetch, etc.)
-   ├─ context/               # React Context providers (AuthContext, UIContext)
-   ├─ lib/                   # helpers: date, storage, constants
-   ├─ services/              # API/client layer (fetch wrappers)
-   └─ types/                 # TS types or JSDoc typedefs (if used)
-```
+   │  ├─ calendar/           # Scheduling Calendar (Week-1)
+   │  ├─ video/              # Video calling UI (Week-2)
+   │  ├─ documents/          # Document chamber (Week-2)
+   │  ├─ payments/           # Payment UI (Week-3)
+   │  └─ security/           # Password meter, OTP form (Week-3)
+   ├─ pages/                 # Login, Register, Dashboard, Profile
+   ├─ context/               # AuthContext, UIContext
+   ├─ hooks/                 # useAuth, useFetch, etc.
+   ├─ services/              # API stubs (meetings, payments)
+   └─ types/                 # Shared TS types
 
-> **Note:** Exact folders may vary in the base repo. Keep new feature code in clearly named subfolders (`components/calendar`, `services/meetings.js`, etc.).
+| Route                     | Page Component         | Purpose                                |
+| ------------------------- | ---------------------- | -------------------------------------- |
+| `/login`                  | `pages/LoginPage`      | User auth + OTP step (2FA mock)        |
+| `/register`               | `pages/RegisterPage`   | Signup with role selection + pwd meter |
+| `/forgot-password`        | `pages/ForgotPassword` | Password reset flow                    |
+| `/dashboard`              | `pages/Dashboard`      | Main dashboard (role-based)            |
+| `/dashboard/entrepreneur` | Entrepreneur view      | Scheduling + wallet + docs             |
+| `/dashboard/investor`     | Investor view          | Deals, funding + payments              |
+| `/profile`                | `pages/Profile`        | User profile & settings                |
+4) Theming & Design System
 
----
+Primary Palette: bg-primary-500, text-primary-700, border-primary-600
 
-## 3) Routing Map
-Typical SPA routes (adjust if your repo differs):
+Secondary/Accent: for highlights (funding, requests)
 
-| Route        | Page Component         | Purpose                                 |
-|--------------|------------------------|------------------------------------------|
-| `/login`     | `pages/Login.jsx`      | User auth (email/password or OAuth)      |
-| `/dashboard` | `pages/Dashboard.jsx`  | User overview + **Calendar** (Week‑1)    |
-| `/profile`   | `pages/Profile.jsx`    | Profile & availability defaults          |
+State colors: success, warning, error (for payments & docs status)
 
-> If the app shows blank at `/`, navigate directly to `/login` or `/dashboard`.
+Typography: Inter var, font-sans
 
----
+Components: consistent Button, Input, Card, Modal built with Tailwind tokens
 
-## 4) Theming & Design System (Tailwind)
-Tailwind is configured in `tailwind.config.js` with **brand palettes** and **animations**. Use semantic utilities instead of hex codes.
+5) State Management
 
-### Palette (aliases → classes)
-- **Primary:** `text-primary-700`, `bg-primary-500`, `border-primary-800`
-- **Secondary:** `bg-secondary-500`, `text-secondary-700`
-- **Accent:** `bg-accent-500`, `text-accent-700`
-- **State colors:** `success-500`, `warning-500`, `error-500`
+Local state: form inputs, UI toggles
 
-### Typography
-- Base font: `font-sans` → Inter var
+Context:
 
-### Motion
-- `animate-fade-in` (0.5s) and `animate-slide-in` (0.3s) for subtle UI feedback
+AuthContext → login, register, reset password, role (investor/entrepreneur)
 
-### Global CSS
-Ensure `src/styles/global.css` includes Tailwind layers and any app‑wide utilities:
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+UIContext (future) → theme, toasts
 
-/* Example composables */
-.container-p {
-  @apply p-6 md:p-8 lg:p-10;
-}
-.card {
-  @apply bg-white rounded-2xl shadow-lg;
-}
-```
+Mock data: Local arrays for meetings, transactions, docs in Week-1 → Week-3
 
----
+Future: Replace with API layer in services/
 
-## 5) State Management Strategy
-- **Local state:** Component‑level UI (inputs, dialogs, local events list)
-- **Context (Optional for Week‑1):**
-  - `AuthContext` → user session, token, role (investor/entrepreneur)
-  - `UIContext` → theme mode, toasts, modals
-- **Server state (Future Weeks):** Remote data (meetings, availability). For Week‑1, a local in‑memory array is acceptable; later replace with API calls.
+6) Completed Milestones
+✅ Week 1 – Scheduling & Setup
 
----
+Milestone 1: Repo setup, Tailwind theme, documented architecture
 
-## 6) Calendar Feature (Week‑1)
-**Goal:** Users can add/modify availability and visualize meetings inside Dashboard.
+Milestone 2: Calendar integration (FullCalendar)
 
-### Libraries
-```
-@fullcalendar/react @fullcalendar/daygrid @fullcalendar/timegrid @fullcalendar/interaction
-```
+Add/modify availability slots
 
-### Minimal Integration
-`components/calendar/Calendar.jsx`
-- Renders FullCalendar
-- Handles clicks to create events
-- Stores events in local state for Week‑1
+Placeholder meeting requests (accept/decline later)
 
-**Event shape (JSDoc):**
-```js
-/** @typedef {Object} CalendarEvent
- *  @property {string} id
- *  @property {string} title
- *  @property {string|Date} start
- *  @property {string|Date} [end]
- *  @property {boolean} [allDay]
- *  @property {"availability"|"request"|"confirmed"} kind
- *  @property {"pending"|"accepted"|"declined"} [status]
- */
-```
+Confirmed meetings displayed on dashboard
 
-**UI Rules (Week‑1 local only):**
-- **Availability slot** → created by clicking on date; color = `bg-primary-500`
-- **Meeting request** → (placeholder button/modal) color = `bg-accent-500`
-- **Confirmed** → `bg-success-500`
+✅ Week 2 – Video Calling & Document Chamber
 
-> In Week‑1, you can implement *availability + add event*. Requests/accept/decline back‑end wiring can come in Week‑2.
+Milestone 3: Video calling UI (mock)
 
-### Dashboard Wiring
-- `pages/Dashboard.jsx` imports `components/calendar/Calendar.jsx`
-- Place inside a `.card` container with padding and title
+Start/End call buttons
 
----
+Video/audio toggle
 
-## 7) Components Catalog (selected)
+Screen share (optional mock)
 
-### Layout
-- `components/layout/Navbar.jsx` — brand, user menu
-- `components/layout/Sidebar.jsx` (if present) — navigation
+Milestone 4: Document chamber
 
-### UI Primitives (ui/)
-- `Button.jsx` — primary/secondary variants using Tailwind classes
-- `Input.jsx`, `Select.jsx`, `Modal.jsx`, `Badge.jsx`, `Card.jsx`
+Upload + preview PDFs
 
-### Feature — Calendar (calendar/)
-- `Calendar.jsx` — FullCalendar wrapper
-- `NewEventDialog.jsx` — (optional) a modal replacing `prompt()` to capture title/date/time
-- `EventLegend.jsx` — shows color meaning (availability/request/confirmed)
+E-signature mock (signature pad)
 
----
+Status labels (Draft, In Review, Signed)
 
-## 8) Services / API Layer (stub for future)
-Create `services/meetings.js` for future server integration:
-```js
-// services/meetings.js
-export async function fetchMeetings() {
-  // GET /api/meetings
-  return [];
-}
+✅ Week 3 – Payments & Security
 
-export async function createMeeting(payload) {
-  // POST /api/meetings
-  return { id: crypto.randomUUID(), ...payload };
-}
+Milestone 5: Payment section
 
-export async function respondToMeeting(id, action /* accept|decline */) {
-  // PATCH /api/meetings/:id
-  return { id, status: action === "accept" ? "accepted" : "declined" };
-}
-```
+Wallet balance display
 
-Keep **all fetch logic** in `services/` so components stay clean.
+Deposit/Withdraw/Transfer (simulation)
 
----
+Transaction history table
 
-## 9) Auth Flow (high‑level)
-- `/login` handles credentials → set token in memory/localStorage
-- `AuthContext` (optional Week‑1) exposes `user`, `login()`, `logout()`
-- Protected routes redirect to `/login` if no session
+Mock funding flow (Investor → Entrepreneur)
 
----
+Milestone 6: Security & access control
 
-## 10) Error, Loading & Empty States
-- Use small helpers/components: `Loader`, `ErrorState`, `EmptyState`
-- Keep UX consistent: spinners, toasts, and retry buttons
+Password strength meter (Register + Reset Password)
 
----
+Multi-step login with OTP form (mock, 6-digit input)
 
-## 11) Environment Variables
-In Vite, env vars start with `VITE_`:
-```
-VITE_API_BASE_URL=https://api.example.com
-VITE_ENV=development
-```
-Create `.env.local` (not committed) and access via `import.meta.env.VITE_API_BASE_URL`.
-
----
-
-## 12) Coding Conventions
-- **File naming:** `PascalCase` for components, `camelCase` for hooks/utils
-- **Imports:** absolute aliases (configure in `vite.config.js`) or consistent relative paths
-- **Styling:** use theme tokens (e.g., `text-primary-700`) — avoid raw hex
-- **Accessibility:** `aria-*` attributes for interactive controls; keyboard navigable dialogs
-- **Testing (optional):** co‑locate tests next to components
-
----
-
-## 13) Build & Deployment (Vercel)
-1. Push to GitHub (your fork)
-2. On Vercel → **New Project** → Import from GitHub
-3. Framework Preset: **Vite** (auto-detected)
-4. Build command: `npm run build` | Output: `dist`
-5. Set env vars (if any) under **Project Settings → Environment Variables**
-6. Deploy → get public URL (e.g., `https://nexus-yourname.vercel.app/login`)
-
----
-
-## 14) Development Workflow
-- **Branches:** `feature/calendar-week1` → PR → `main`
-- **Commits:** small, descriptive (e.g., `feat(calendar): add FullCalendar wrapper with add-on-date-click`)
-- **Docs:** update this `ARCHITECTURE.md` when adding new modules
-
----
-
-## 15) Week‑1 Checklist (copy for PR description)
-- [ ] Tailwind theme configured (colors, fonts, animations)
-- [ ] `Calendar.jsx` added with FullCalendar integration
-- [ ] Calendar rendered on `Dashboard`
-- [ ] Basic event creation (date click → title → event)
-- [ ] `ARCHITECTURE.md` added to repo root
-- [ ] Vercel deployment successful (URL shared)
-
----
-
-## 16) TODO / Roadmap (Weeks 2+)
-- **Meeting requests:** create/send request to another user
-- **Accept/Decline:** status updates & notifications (toast + badge)
-- **Availability management:** dedicated UI to define recurring slots
-- **Persistence:** replace local state with API (services/meetings.js)
-- **Authorization:** role‑based access (investor vs entrepreneur)
-- **Calendar UX:** drag‑to‑select times, edit/delete events via modal
-
----
-
-**Maintainer Note:** Keep this document short but *living*. Update sections when adding services, contexts, or routes so new contributors can onboard quickly.
-
+Role-based dashboards (Investor vs Entrepreneur)
